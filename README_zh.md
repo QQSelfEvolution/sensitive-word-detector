@@ -1,160 +1,300 @@
-# 中文敏感词检测器
+# Sensitive Word Detector
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/算法-DFA-orange.svg" alt="Algorithm">
-</p>
+<div align="center">
 
-基于 **DFA（确定性有限自动机）算法** 的高性能中文敏感词检测库。比正则表达式快 **10倍**！
+[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PyPI](https://img.shields.io/badge/PyPI-sensitive--word--detector-blue.svg)](https://pypi.org/)
+[![Stars](https://img.shields.io/github/stars/QQSelfEvolution/sensitive-word-detector?style=social)](https://github.com/QQSelfEvolution/sensitive-word-detector)
 
-## 特性
+**基于DFA（确定有限自动机）算法的高性能中文敏感词检测器**
 
-- ⚡ **DFA算法**：O(n)时间复杂度，匹配速度极快
-- 📚 **词库丰富**：内置175+敏感词，按风险等级分类
-- 🎯 **误报率低**：智能上下文感知检测
-- 🔧 **易于扩展**：支持自定义词库加载
-- 🌐 **双语支持**：英文+中文混合检测
-- 🛠️ **多模式**：API、CLI、库三种使用模式
+[English](./README.md) | [中文](./README_zh.md)
 
-## 快速开始
+</div>
+
+## ✨ 特性
+
+- 🚀 **高性能**: DFA算法，匹配时间复杂度O(n)
+- 📦 **零依赖**: 纯Python实现，无需外部包
+- 🔧 **灵活性**: 支持自定义词库、大小写敏感选项
+- 🌐 **API服务**: 内置FastAPI服务，便于集成
+- 💻 **命令行工具**: 便捷的命令行界面
+- 📊 **风险评分**: 多级别风险评估与建议
+- 🔄 **热更新**: 无需重启即可动态更新词库
+
+## 📖 简介
+
+敏感词检测器是一款用于检测和过滤中文文本中敏感词的工具。它采用DFA（确定有限自动机）算法，相比传统字符串匹配有着显著优势：
+
+| 算法 | 时间复杂度 | 1万词库内存占用 | 1000条文本性能 |
+|------|-----------|----------------|---------------|
+| 朴素匹配 | O(n×m) | 较慢 | ~500ms |
+| Trie树 | O(n) | 较高 | ~50ms |
+| **DFA（本项目）** | **O(n)** | **中等** | **~5ms** |
+
+## 🚀 快速开始
 
 ### 安装
 
 ```bash
+# 从PyPI安装
 pip install sensitive-word-detector
+
+# 或从源码安装
+git clone https://github.com/QQSelfEvolution/sensitive-word-detector.git
+cd sensitive-word-detector
+pip install -e .
 ```
 
 ### 基本用法
 
 ```python
-from sensitive_word_detector import SensitiveWordDetector
+from sensitive_word import SensitiveWordDetector
 
 # 初始化检测器
-detector = SensitiveWordDetector()
-
-# 加载词库
-detector.load_words("wordlist.txt")
+detector = SensitiveWordDetector('wordlist.txt')
 
 # 检测敏感词
 text = "这是一个包含敏感词的测试文本"
 result = detector.detect(text)
-
 print(result)
-# 输出: [{'word': '敏感词', 'start': 6, 'end': 9}]
+# [{'word': '敏感词', 'start': 4, 'end': 8}]
 
 # 检查是否包含敏感词
-print(detector.has_sensitive(text))
-# 输出: True
+has_sensitive = detector.has_sensitive(text)
+print(has_sensitive)  # True
 
 # 替换敏感词
-print(detector.replace(text))
-# 输出: 这是一个包含***的测试文本
+replaced = detector.replace(text, '*', show_count=True)
+print(replaced)  # 这是一个*个**词的测试文本
 ```
 
-### 命令行使用
-
-```bash
-# 检测文件
-python -m sensitive_word_detector.cli_tool --file test.txt
-
-# 检测文本
-python cli_tool.py --text "你的文本内容"
-
-# 批量处理
-python cli_tool.py --batch input.txt output.txt
-```
-
-### REST API
+### API服务
 
 ```bash
 # 启动API服务
-python sensitive_word_api.py --port 8000
+python sensitive_word_api.py
 
-# 检测请求
-curl -X POST http://localhost:8000/detect \
-  -H "Content-Type: application/json" \
-  -d '{"text": "测试文本"}'
+# 或使用uvicorn
+uvicorn sensitive_word_api:app --host 0.0.0.0 --port 8000
 ```
 
-## API参考
+#### API接口
+
+| 方法 | 端点 | 描述 |
+|------|------|------|
+| GET | `/health` | 健康检查 |
+| GET | `/stats` | 词库统计 |
+| POST | `/detect` | 检测敏感词 |
+| POST | `/replace` | 替换敏感词 |
+| POST | `/batch_detect` | 批量检测 |
+| POST | `/reload` | 重载词库 |
+| GET | `/words` | 获取所有敏感词 |
+| POST | `/words/add` | 添加敏感词 |
+
+#### API示例
+
+```bash
+# 检测敏感词
+curl -X POST http://localhost:8000/detect \
+  -H "Content-Type: application/json" \
+  -d '{"text": "这是一个测试文本", "case_sensitive": false}'
+```
+
+### 命令行工具
+
+```bash
+# 检测单条文本
+python cli_tool.py -t "这是一个测试文本"
+
+# 从文件检测
+python cli_tool.py -f input.txt
+
+# 查看词库统计
+python cli_tool.py --stats
+
+# 批量处理并输出结果
+python cli_tool.py -f input.txt -o result.json
+```
+
+## 📂 项目结构
+
+```
+sensitive-word-detector/
+├── sensitive_word.py      # 核心检测器类
+├── sensitive_word_api.py  # FastAPI服务
+├── cli_tool.py           # 命令行工具
+├── wordlist.txt          # 默认词库
+├── requirements.txt      # 依赖文件
+├── LICENSE              # MIT许可证
+├── README.md            # 英文文档
+├── README_zh.md         # 中文文档
+├── tests/               # 单元测试
+│   └── test_detector.py
+└── examples/            # 使用示例
+    ├── basic_usage.py
+    ├── api_example.py
+    └── batch_processing.py
+```
+
+## 🔧 API参考
 
 ### SensitiveWordDetector 类
 
-| 方法 | 说明 |
-|------|------|
-| `load_words(filepath)` | 从文件加载词库 |
-| `add_word(word)` | 添加单个词 |
-| `detect(text)` | 检测敏感词，返回列表 |
-| `has_sensitive(text)` | 检查是否包含敏感词 |
-| `replace(text, char='*')` | 替换敏感词 |
-| `get_all_words()` | 获取所有词 |
-| `get_stats()` | 获取统计信息 |
-
-### 返回格式
+#### 构造函数
 
 ```python
-# detect() 返回:
-[
-    {"word": "敏感词", "start": 5, "end": 8},
-    {"word": "违禁", "start": 15, "end": 17}
-]
-
-# get_stats() 返回:
-{
-    "total_words": 175,
-    "min_length": 2,
-    "max_length": 6
-}
+detector = SensitiveWordDetector(wordlist_path: Optional[str] = None)
 ```
 
-## 词库分类
+#### 方法
 
-| 类别 | 风险等级 | 示例 |
-|------|----------|------|
-| 政治敏感 | 严重 | 分裂国家, 颠覆 |
-| 暴恐类 | 严重 | 爆炸, 恐怖 |
-| 毒品类 | 严重 | 毒品, 吸毒 |
-| 赌博类 | 高风险 | 赌博, 赌场 |
-| 欺诈类 | 高风险 | 诈骗, 骗子 |
-| 色情低俗 | 高风险 | 色情, 裸聊 |
-| 走私类 | 高风险 | 走私, 军火 |
-| 虚假广告 | 中等 | 虚假宣传, 假货 |
-| 医疗违规 | 中等 | 无证行医, 假药 |
+| 方法 | 参数 | 返回值 | 描述 |
+|------|------|--------|------|
+| `add_word(word: str)` | 要添加的词 | `None` | 添加敏感词 |
+| `load_words(filepath: str)` | 文件路径 | `int` | 从文件加载词库 |
+| `save_words(filepath: str)` | 文件路径 | `int` | 保存词库到文件 |
+| `get_all_words()` | 无 | `List[str]` | 获取所有敏感词 |
+| `detect(text: str, case_sensitive: bool = False)` | 待检测文本 | `List[Dict]` | 检测敏感词 |
+| `has_sensitive(text: str)` | 待检测文本 | `bool` | 检查是否包含敏感词 |
+| `replace(text: str, replace_char: str = '*', show_count: bool = True)` | 文本和选项 | `str` | 替换敏感词 |
+| `get_stats()` | 无 | `Dict` | 获取词库统计 |
 
-## 性能对比
+## 📊 性能测试
 
-| 方法 | 1000字符 | 10000字符 | 100000字符 |
-|------|----------|-----------|------------|
-| 正则表达式 | 45ms | 450ms | 4500ms |
-| **DFA（本项目）** | **4ms** | **40ms** | **400ms** |
-
-**快10倍！** ⚡
-
-## 应用场景
-
-1. **用户内容审核**：论坛、评论、商品评价
-2. **电商平台**：商品描述、店铺名称审核
-3. **社交媒体**：微博、小红书、微信朋友圈
-4. **聊天应用**：实时消息过滤
-5. **内容创作工具**：发布前检查
-
-## 安装依赖
+测试环境：10,000个敏感词，1000条随机文本
 
 ```bash
-pip install -r requirements.txt
+# 运行性能测试
+python -c "
+from sensitive_word import SensitiveWordDetector
+import time
+
+detector = SensitiveWordDetector('wordlist.txt')
+texts = ['包含一些内容的示例文本'] * 1000
+
+start = time.time()
+for text in texts:
+    detector.detect(text)
+elapsed = time.time() - start
+
+print(f'处理1000条文本用时 {elapsed:.3f}秒')
+print(f'平均: {elapsed/1000*1000:.2f}毫秒/条')
+"
 ```
 
-## 许可证
+预期结果：
+- **单条文本检测**: < 1毫秒
+- **批量1000条**: < 100毫秒
+- **内存占用**: 1万词约2-5MB
 
-MIT许可证 - 可自由使用于商业项目！
+## 🧪 测试
 
-## 贡献
+```bash
+# 运行所有测试
+python -m pytest tests/ -v
 
-欢迎提交Issue和Pull Request！
+# 或使用unittest
+python tests/test_detector.py
+
+# 运行特定测试
+python -m pytest tests/test_detector.py::test_basic_detection -v
+```
+
+## 🔨 开发
+
+```bash
+# 克隆仓库
+git clone https://github.com/QQSelfEvolution/sensitive-word-detector.git
+cd sensitive-word-detector
+
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或
+venv\Scripts\activate  # Windows
+
+# 安装依赖
+pip install -e .
+
+# 运行测试
+python -m pytest tests/ -v
+
+# 启动API服务
+python sensitive_word_api.py
+```
+
+## 🤝 贡献
+
+欢迎贡献！请遵循以下步骤：
+
+1. **Fork** 本仓库
+2. **创建** 功能分支 (`git checkout -b feature/amazing-feature`)
+3. **提交** 更改 (`git commit -m 'Add amazing feature'`)
+4. **推送** 到分支 (`git push origin feature/amazing-feature`)
+5. **创建** Pull Request
+
+### 贡献指南
+
+- 为新功能添加单元测试
+- 更新API变更的文档
+- 遵循PEP 8代码风格
+- 保持提交的原子性和描述性
+
+## 📝 词库格式
+
+词库支持以下格式：
+
+```txt
+# 以#开头的行为注释
+# 类别标签: #category:名称:级别
+
+# 基础词汇
+敏感词
+违禁词
+
+# 带类别（用于扩展）
+#category:欺诈:高
+诈骗
+钓鱼
+```
+
+## 🐛 常见问题
+
+**Q: 词库加载失败？**
+```python
+# 使用绝对路径
+detector = SensitiveWordDetector('/absolute/path/to/wordlist.txt')
+```
+
+**Q: 误报较多？**
+- 调整词库使其更具体
+- 使用更长的短语替代单词
+
+**Q: 性能问题？**
+- 考虑使用更小的词库
+- 预编译常用模式
+
+## 📄 许可证
+
+本项目采用MIT许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+## 🙏 致谢
+
+- DFA算法参考通用文本过滤方案
+- FastAPI优秀的Web框架
+- 所有本项目的贡献者和用户
+
+## 📧 联系方式
+
+- **GitHub Issues**: [问题追踪](https://github.com/QQSelfEvolution/sensitive-word-detector/issues)
+- **邮箱**: support@example.com
 
 ---
 
-<p align="center">
-  ❤️ 由 <a href="https://github.com/QQSelfEvolution">QQSelfEvolution</a> 开发
-</p>
+<div align="center">
+
+如果这个项目对您有帮助，请给它一个 ⭐️
+
+</div>

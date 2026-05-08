@@ -1,0 +1,11 @@
+# Example Input File for Batch Processing
+# One text per line, empty lines will be skipped
+
+这是一段正常的文本内容
+这是一个包含敏感词的测试
+正常文本不包含任何敏感词
+使用外挂作弊会被处罚
+赌博网站是违法的
+Python编程很有趣
+敏感词和违禁内容
+这是一段纯文本
