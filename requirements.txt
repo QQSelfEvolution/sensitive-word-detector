@@ -1,0 +1,2 @@
+# Requirements for Sensitive Word Detector
+# No external dependencies - pure Python implementation!
